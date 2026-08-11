@@ -51,6 +51,36 @@ Route-level middleware backs up every permission — even if a user manually typ
 
 **`notifications`** (Laravel's default notifications table, for in-app alerts)
 
+## Requirements
+
+Before starting, make sure you have the following installed:
+
+- **PHP** 8.2 or higher
+- **Composer** (PHP dependency manager)
+- **Node.js** and **npm**
+- **MySQL** (or use Postgres if deploying to Render — see Deployment section)
+- **Git**
+
+### Windows users
+
+The easiest way to get PHP, Composer, and MySQL running together is via [Laragon](https://laragon.org/) or [XAMPP](https://www.apachefriends.org/). Laragon is recommended — it bundles PHP, MySQL, and Composer, and gives you a one-click "Start All" for your local server and database.
+
+- Install [Composer for Windows](https://getcomposer.org/download/) if not bundled with your local dev tool.
+- Install [Node.js](https://nodejs.org/) (LTS version).
+- Use **Git Bash**, **PowerShell**, or **CMD** to run the commands in this guide — they all work the same way.
+- If using Laragon, place the project inside Laragon's `www` folder, or run everything through Laragon's terminal to make sure PHP/MySQL paths are set correctly.
+
+### macOS users
+
+The easiest setup is via [Homebrew](https://brew.sh/):
+
+```bash
+brew install php composer node mysql
+brew services start mysql
+```
+
+Then continue with the standard steps below using Terminal (or iTerm).
+
 ## Setup & Installation
 
 ### 1. Clone and install dependencies
@@ -64,10 +94,32 @@ npm install
 
 ### 2. Environment setup
 
+The project includes an `.env.example` file with all the required variable names but no real values — you need your **own** `.env` file with your own local database and mail credentials. Don't reuse anyone else's `.env` values (especially mail credentials).
+
+Create your `.env` file by copying the example:
+
+**macOS / Linux / Git Bash (Windows):**
 ```bash
 cp .env.example .env
+```
+
+**Windows (Command Prompt):**
+```cmd
+copy .env.example .env
+```
+
+**Windows (PowerShell):**
+```powershell
+Copy-Item .env.example .env
+```
+
+Then generate the app encryption key:
+
+```bash
 php artisan key:generate
 ```
+
+Open the new `.env` file in your code editor and fill in your own values for the database and mail sections below — don't just copy someone else's filled-in `.env`, since database credentials, mail passwords, and app keys should be unique per environment.
 
 Configure your database in `.env`:
 
@@ -80,10 +132,14 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-Set the app timezone to South Africa:
+> **Windows (Laragon/XAMPP) users:** default MySQL username is usually `root` with an empty password, unless you set one during install.
+> **macOS (Homebrew) users:** default is also usually `root` with no password unless configured otherwise.
 
-```env
-APP_TIMEZONE=Africa/Johannesburg
+Set the app timezone to South Africa — this is set in the config file, not `.env`:
+
+```php
+// config/app.php
+'timezone' => 'Africa/Johannesburg',
 ```
 
 ### 3. Mail configuration (Gmail SMTP)
@@ -101,7 +157,23 @@ MAIL_FROM_NAME="Phekong Stock System"
 
 > Use a [Google App Password](https://myaccount.google.com/apppasswords) (requires 2-Step Verification enabled), not your regular Gmail password. Paste it without spaces.
 
-### 4. Run migrations and seed data
+### 4. Create the database
+
+Before migrating, make sure the database itself exists — Laravel doesn't create it for you, only the tables inside it.
+
+**Using the MySQL CLI (Windows Git Bash, macOS Terminal, or Linux):**
+```bash
+mysql -u root -p
+```
+Then inside the MySQL prompt:
+```sql
+CREATE DATABASE phekong;
+exit;
+```
+
+**Or using a GUI tool** like TablePlus, phpMyAdmin (bundled with Laragon/XAMPP), or Sequel Ace (macOS) — just create a new database named `phekong` (or match whatever you set in `DB_DATABASE`).
+
+### 5. Run migrations and seed data
 
 ```bash
 php artisan migrate
@@ -113,19 +185,49 @@ This seeds:
 - 3 test users (see below)
 - 11 sample herbal products, several pre-set to trigger the low-stock flag
 
-### 5. Build frontend assets
+### 6. Confirm role middleware is registered
+
+The role-based route protection depends on an alias registered in `bootstrap/app.php`. This should already be committed in the repo, but if you're setting the project up from scratch or roles aren't restricting access correctly, confirm this block exists:
+
+```php
+// bootstrap/app.php
+->withMiddleware(function (Middleware $middleware) {
+    $middleware->alias([
+        'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+    ]);
+})
+```
+
+### 7. Confirm public registration is disabled
+
+Since accounts are provisioned via the seeder (not self-registration), the register routes should be commented out in `routes/auth.php`. This should already be in the repo — just confirm if you hit unexpected behavior:
+
+```php
+// routes/auth.php
+Route::middleware('guest')->group(function () {
+    // Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
+    // Route::post('register', [RegisteredUserController::class, 'store']);
+    Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    // ...forgot password routes stay active
+});
+```
+
+### 8. Build frontend assets (production)
 
 ```bash
 npm run build
 ```
 
-For active development with live reload:
+### 9. Run the app
+
+For active development (runs the PHP server, queue listener, log viewer, and Vite asset watcher together):
 
 ```bash
-npm run dev
+composer run dev
 ```
 
-### 6. Serve the app
+Or, if you just need the server without the extras:
 
 ```bash
 php artisan serve
@@ -149,6 +251,29 @@ Two events trigger notifications, delivered via both **database** (in-app) and *
 
 1. **Stock Request Submitted** — sent to all Approval Admins when a Stock Admin submits a request.
 2. **Low Stock Alert** — sent to all Approval Admins when a product's quantity drops to or below its threshold (fires automatically via a model event on `Product`).
+
+## Troubleshooting
+
+**`SQLSTATE[42S02]: Base table or view not found: 'cache'`**
+Run `php artisan cache:table && php artisan migrate`, or set `CACHE_STORE=file` in `.env` and run `php artisan config:clear`.
+
+**`Class "App\Notifications\StockUpdateRequest" not found` (or similar "Class X not found" pointing at the wrong namespace)**
+A model class is missing its `use` import at the top of the file. Add e.g. `use App\Models\StockUpdateRequest;` or `use App\Models\Product;` above the class declaration.
+
+**`The GET method is not supported for route ... Supported methods: POST`**
+Something is linking to a POST-only route with a plain `<a href="">` instead of submitting a `<form method="POST">`. Check the relevant Blade view for a stray anchor tag.
+
+**Duplicate stock request rows after one submission**
+Caused by double-clicking submit or refreshing after a POST. Disable the submit button on click:
+```blade
+<form ... onsubmit="this.querySelector('button[type=submit]').disabled = true;">
+```
+
+**Styling looks broken or unstyled buttons after editing Blade files**
+Tailwind only compiles classes present at build time. Run `npm run build` (or keep `composer run dev` running) and hard-refresh the browser (Ctrl+Shift+R / Cmd+Shift+R).
+
+**Emails not arriving**
+Check `MAIL_MAILER` in `.env`. Use `MAIL_MAILER=log` to dump emails to `storage/logs/laravel.log` for testing without real delivery, or confirm your Gmail App Password is correct and pasted without spaces.
 
 ## Deployment
 
