@@ -1,59 +1,188 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Phekong Stock Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel-based stock management system built for a business with a sales rep and two admins, each with distinct roles and permissions. Product stock levels can only be changed through a request-and-approval workflow, ensuring the person who physically manages the warehouse has final say over stock counts.
 
-## About Laravel
+## Overview
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+The system solves a simple business problem: multiple people touch product data, but only one person (the warehouse-side admin) actually knows the real stock count. So instead of letting anyone edit quantity directly, updates go through an approval flow.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Roles & Permissions
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Role | Can View Products | Can Edit Product Details | Can Request Stock Update | Can Approve/Reject Stock Requests |
+|---|---|---|---|---|
+| **Sales Rep** | ✅ | ❌ | ❌ | ❌ |
+| **Stock Admin** | ✅ | ✅ (name, description, price, threshold) | ✅ | ❌ |
+| **Approval Admin** | ✅ | ❌ | ❌ | ✅ |
 
-## Learning Laravel
+Roles and permissions are managed with [spatie/laravel-permission](https://spatie.be/docs/laravel-permission).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- **Sales Rep** — logs in and sees a read-only product list: name, description, price, and quantity, with a visual flag when stock is low.
+- **Stock Admin** — manages product details (not quantity directly) and can submit a request to change stock quantity — e.g. after a delivery or stocktake.
+- **Approval Admin** — the person who actually knows what's in the warehouse. Reviews pending stock requests and approves or rejects them. Product quantity only changes once a request is approved.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Route-level middleware backs up every permission — even if a user manually types a restricted URL, they're blocked with a 403.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Core Workflow
 
-## Agentic Development
+1. Stock Admin submits a stock update request for a product (new quantity + optional reason).
+2. Approval Admin receives a notification (in-app + email) and reviews the request on the **Pending Stock Requests** page.
+3. Approval Admin approves or rejects it.
+4. On approval, the product's actual quantity updates immediately.
+5. If the new quantity falls at or below the product's low-stock threshold, both admins get a low-stock notification (in-app + email).
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Tech Stack
+
+- **Framework:** Laravel
+- **Auth scaffolding:** Laravel Breeze (Blade stack)
+- **Roles & permissions:** spatie/laravel-permission
+- **Frontend:** Blade + Tailwind CSS
+- **Notifications:** Laravel Notifications (`database` + `mail` channels)
+- **Timezone:** Africa/Johannesburg (SAST)
+
+## Database Structure
+
+**`products`**
+- `name`, `description`, `price`, `quantity`, `low_stock_threshold`
+
+**`stock_update_requests`**
+- `product_id`, `current_quantity`, `requested_quantity`, `reason`
+- `status` (`pending` / `approved` / `rejected`)
+- `requested_by`, `approved_by`, `decided_at`
+
+**`notifications`** (Laravel's default notifications table, for in-app alerts)
+
+## Setup & Installation
+
+### 1. Clone and install dependencies
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone <repo-url>
+cd phekong
+composer install
+npm install
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Environment setup
 
-## Contributing
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Configure your database in `.env`:
 
-## Code of Conduct
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=phekong
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Set the app timezone to South Africa:
 
-## Security Vulnerabilities
+```env
+APP_TIMEZONE=Africa/Johannesburg
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 3. Mail configuration (Gmail SMTP)
 
-## License
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=youremail@gmail.com
+MAIL_PASSWORD=your16charapppassword
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=youremail@gmail.com
+MAIL_FROM_NAME="Phekong Stock System"
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# phekong
+> Use a [Google App Password](https://myaccount.google.com/apppasswords) (requires 2-Step Verification enabled), not your regular Gmail password. Paste it without spaces.
+
+### 4. Run migrations and seed data
+
+```bash
+php artisan migrate
+php artisan db:seed
+```
+
+This seeds:
+- 3 roles: `sales_rep`, `stock_admin`, `approval_admin`
+- 3 test users (see below)
+- 11 sample herbal products, several pre-set to trigger the low-stock flag
+
+### 5. Build frontend assets
+
+```bash
+npm run build
+```
+
+For active development with live reload:
+
+```bash
+npm run dev
+```
+
+### 6. Serve the app
+
+```bash
+php artisan serve
+```
+
+Visit `http://localhost:8000` — you'll be redirected to login.
+
+## Test Accounts
+
+| Role | Email | Password |
+|---|---|---|
+| Sales Rep | sales@test.com | password |
+| Stock Admin | stock@test.com | password |
+| Approval Admin | approve@test.com | password |
+
+> Public registration is disabled — accounts are provisioned via the seeder or `php artisan tinker`, keeping access controlled.
+
+## Notifications
+
+Two events trigger notifications, delivered via both **database** (in-app) and **mail** (email) channels:
+
+1. **Stock Request Submitted** — sent to all Approval Admins when a Stock Admin submits a request.
+2. **Low Stock Alert** — sent to all Approval Admins when a product's quantity drops to or below its threshold (fires automatically via a model event on `Product`).
+
+## Deployment
+
+Deployable to Render (or similar free-tier platforms). Since Render's free tier no longer offers MySQL, switch `DB_CONNECTION` to `pgsql` for deployment — no code changes required, Laravel supports Postgres natively.
+
+## Project Structure Highlights
+
+```
+app/
+  Http/Controllers/
+    ProductController.php          # Product CRUD (stock_admin only)
+    StockUpdateRequestController.php  # Request + approval workflow
+  Models/
+    Product.php
+    StockUpdateRequest.php
+  Notifications/
+    StockRequestSubmitted.php
+    LowStockAlert.php
+database/
+  migrations/
+  seeders/
+    RoleSeeder.php
+    ProductSeeder.php
+resources/views/
+  products/
+    index.blade.php
+    create.blade.php
+    edit.blade.php
+  stock-requests/
+    index.blade.php
+routes/
+  web.php
+```
+
+## Author
+
+Mpho Mohlabane
