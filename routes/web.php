@@ -4,14 +4,25 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StockUpdateRequestController;
+use App\Http\Controllers\SaleController;
+use App\Http\Controllers\UserController;
 
 
 Route::get('/', function () {
     return redirect()->route('products.index');
 });
 
-Route::middleware('auth')->group(function () {
 
+Route::middleware('role:approval_admin')->group(function () {
+    Route::get('/stock-requests', [StockUpdateRequestController::class, 'index'])->name('stock-requests.index');
+    Route::post('/stock-requests/{stockUpdateRequest}/approve', [StockUpdateRequestController::class, 'approve'])->name('stock-requests.approve');
+    Route::post('/stock-requests/{stockUpdateRequest}/reject', [StockUpdateRequestController::class, 'reject'])->name('stock-requests.reject');
+
+    // user management
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 });
 
 Route::middleware('auth')->group(function () {
@@ -35,6 +46,9 @@ Route::middleware('auth')->group(function () {
         // stock admin proposes stock updates
         Route::post('/products/{product}/stock-request', [StockUpdateRequestController::class, 'store'])
             ->name('stock-requests.store');
+
+        // stock admin views sales report
+        Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
     });
 
     // approval admin approves/rejects
@@ -42,6 +56,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/stock-requests', [StockUpdateRequestController::class, 'index'])->name('stock-requests.index');
         Route::post('/stock-requests/{stockUpdateRequest}/approve', [StockUpdateRequestController::class, 'approve'])->name('stock-requests.approve');
         Route::post('/stock-requests/{stockUpdateRequest}/reject', [StockUpdateRequestController::class, 'reject'])->name('stock-requests.reject');
+    });
+
+    // sales rep logs daily sales
+    Route::middleware('role:sales_rep')->group(function () {
+        Route::get('/sales/create', [SaleController::class, 'create'])->name('sales.create');
+        Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
     });
 
     // Profile update

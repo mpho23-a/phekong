@@ -2,8 +2,13 @@
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">Products</h2>
     </x-slot>
-
+    
     <div class="py-6 max-w-6xl mx-auto sm:px-6 lg:px-8">
+        @if (auth()->user()->hasRole('approval_admin'))
+    <a href="{{ route('users.index') }}" class="inline-block mb-4 ml-2 px-4 py-2 bg-gray-700 text-white rounded">
+        Manage Users
+    </a>
+@endif
 
         @if (session('success'))
             <div class="mb-4 p-3 bg-green-100 text-green-700 rounded">{{ session('success') }}</div>
@@ -22,6 +27,18 @@
                 </a>
             @endif
         @endauth
+
+        @if (auth()->user()->hasRole('sales_rep'))
+    <a href="{{ route('sales.create') }}" class="inline-block mb-4 px-4 py-2 bg-indigo-600 text-white rounded">
+        Log Today's Sales
+    </a>
+@endif
+
+@if (auth()->user()->hasRole('stock_admin'))
+    <a href="{{ route('sales.index') }}" class="inline-block mb-4 ml-2 px-4 py-2 bg-green-600 text-white rounded">
+        Sales Report
+    </a>
+@endif
 
         <div class="bg-white shadow rounded overflow-x-auto">
             <table class="min-w-full text-sm">
