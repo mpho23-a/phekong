@@ -8,27 +8,34 @@ The system solves a simple business problem: multiple people touch product data,
 
 ## Roles & Permissions
 
-| Role | Can View Products | Can Edit Product Details | Can Request Stock Update | Can Approve/Reject Stock Requests |
-|---|---|---|---|---|
-| **Sales Rep** | ✅ | ❌ | ❌ | ❌ |
-| **Stock Admin** | ✅ | ✅ (name, description, price, threshold) | ✅ | ❌ |
-| **Approval Admin** | ✅ | ❌ | ❌ | ✅ |
+| Role | View Products | Edit Product Details | Request Stock Update | Approve/Reject Stock Requests | Log Daily Sales | View Sales Report | Manage Users |
+|---|---|---|---|---|---|---|---|
+| **Sales Rep** | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **Stock Admin** | ✅ | ✅ (name, description, price, threshold) | ✅ | ❌ | ❌ | ✅ | ❌ |
+| **Approval Admin** | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ |
 
 Roles and permissions are managed with [spatie/laravel-permission](https://spatie.be/docs/laravel-permission).
 
-- **Sales Rep** — logs in and sees a read-only product list: name, description, price, and quantity, with a visual flag when stock is low.
-- **Stock Admin** — manages product details (not quantity directly) and can submit a request to change stock quantity — e.g. after a delivery or stocktake.
-- **Approval Admin** — the person who actually knows what's in the warehouse. Reviews pending stock requests and approves or rejects them. Product quantity only changes once a request is approved.
+- **Sales Rep** — logs in and sees a read-only product list: name, description, price, and quantity, with a visual flag when stock is low. Can log a daily sales sheet (multiple products in one submission), which deducts sold quantities from stock immediately.
+- **Stock Admin** — manages product details (not quantity directly), can submit a request to change stock quantity (e.g. after a delivery or stocktake), and reviews the sales report to track what's moving.
+- **Approval Admin** — the person who actually knows what's in the warehouse. Reviews pending stock requests and approves or rejects them. Also manages user accounts (adding/removing sales reps and admins), since public registration is disabled.
 
 Route-level middleware backs up every permission — even if a user manually types a restricted URL, they're blocked with a 403.
 
 ## Core Workflow
 
+**Stock updates (approval-gated):**
 1. Stock Admin submits a stock update request for a product (new quantity + optional reason).
 2. Approval Admin receives a notification (in-app + email) and reviews the request on the **Pending Stock Requests** page.
 3. Approval Admin approves or rejects it.
 4. On approval, the product's actual quantity updates immediately.
 5. If the new quantity falls at or below the product's low-stock threshold, both admins get a low-stock notification (in-app + email).
+
+**Daily sales (direct, no approval needed):**
+1. Sales Rep opens the sales sheet, enters quantity sold per product for the day, and submits.
+2. Each submitted line item deducts directly from that product's stock quantity.
+3. If a sale drops a product's quantity to or below its low-stock threshold, the same low-stock notification fires automatically.
+4. Stock Admin can view and filter the sales report (by date range and/or product) to track performance and decide when to request a restock.
 
 ## Tech Stack
 
@@ -38,6 +45,8 @@ Route-level middleware backs up every permission — even if a user manually typ
 - **Frontend:** Blade + Tailwind CSS
 - **Notifications:** Laravel Notifications (`database` + `mail` channels)
 - **Timezone:** Africa/Johannesburg (SAST)
+- **Database:** SQLite (local development and Render deployment)
+- **Deployment:** Render, via Docker (bundles PHP, Composer, and Node in one container)
 
 ## Database Structure
 
@@ -49,6 +58,13 @@ Route-level middleware backs up every permission — even if a user manually typ
 - `status` (`pending` / `approved` / `rejected`)
 - `requested_by`, `approved_by`, `decided_at`
 
+**`sales`**
+- `product_id`, `sales_rep_id`, `quantity_sold`, `sale_date`, `notes`
+- Submitting a sale deducts directly from the linked product's `quantity`.
+
+**`users`** (extended with roles via spatie/laravel-permission)
+- Standard Breeze fields, plus a role assignment (`sales_rep`, `stock_admin`, or `approval_admin`)
+
 **`notifications`** (Laravel's default notifications table, for in-app alerts)
 
 ## Requirements
@@ -58,25 +74,20 @@ Before starting, make sure you have the following installed:
 - **PHP** 8.2 or higher
 - **Composer** (PHP dependency manager)
 - **Node.js** and **npm**
-- **MySQL** (or use Postgres if deploying to Render — see Deployment section)
 - **Git**
+
+No separate database server is required — this project uses **SQLite**, which ships with PHP and stores the entire database as a single file inside the project.
 
 ### Windows users
 
-The easiest way to get PHP, Composer, and MySQL running together is via [Laragon](https://laragon.org/) or [XAMPP](https://www.apachefriends.org/). Laragon is recommended — it bundles PHP, MySQL, and Composer, and gives you a one-click "Start All" for your local server and database.
-
-- Install [Composer for Windows](https://getcomposer.org/download/) if not bundled with your local dev tool.
-- Install [Node.js](https://nodejs.org/) (LTS version).
-- Use **Git Bash**, **PowerShell**, or **CMD** to run the commands in this guide — they all work the same way.
-- If using Laragon, place the project inside Laragon's `www` folder, or run everything through Laragon's terminal to make sure PHP/MySQL paths are set correctly.
+Install [Composer for Windows](https://getcomposer.org/download/) and [Node.js](https://nodejs.org/) (LTS version). PHP is often bundled with tools like [Laragon](https://laragon.org/) or [XAMPP](https://www.apachefriends.org/) if you don't already have it. Use **Git Bash**, **PowerShell**, or **CMD** — all commands in this guide work the same in any of them.
 
 ### macOS users
 
 The easiest setup is via [Homebrew](https://brew.sh/):
 
 ```bash
-brew install php composer node mysql
-brew services start mysql
+brew install php composer node
 ```
 
 Then continue with the standard steps below using Terminal (or iTerm).
@@ -94,7 +105,7 @@ npm install
 
 ### 2. Environment setup
 
-The project includes an `.env.example` file with all the required variable names but no real values — you need your **own** `.env` file with your own local database and mail credentials. Don't reuse anyone else's `.env` values (especially mail credentials).
+The project includes an `.env.example` file with all the required variable names but no real values — you need your **own** `.env` file with your own mail credentials. Don't reuse anyone else's `.env` values.
 
 Create your `.env` file by copying the example:
 
@@ -119,21 +130,12 @@ Then generate the app encryption key:
 php artisan key:generate
 ```
 
-Open the new `.env` file in your code editor and fill in your own values for the database and mail sections below — don't just copy someone else's filled-in `.env`, since database credentials, mail passwords, and app keys should be unique per environment.
-
-Configure your database in `.env`:
+Set the database connection in `.env` to SQLite:
 
 ```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=phekong
-DB_USERNAME=root
-DB_PASSWORD=
+DB_CONNECTION=sqlite
+DB_DATABASE=database/database.sqlite
 ```
-
-> **Windows (Laragon/XAMPP) users:** default MySQL username is usually `root` with an empty password, unless you set one during install.
-> **macOS (Homebrew) users:** default is also usually `root` with no password unless configured otherwise.
 
 Set the app timezone to South Africa — this is set in the config file, not `.env`:
 
@@ -155,23 +157,26 @@ MAIL_FROM_ADDRESS=youremail@gmail.com
 MAIL_FROM_NAME="Phekong Stock System"
 ```
 
-> Use a [Google App Password](https://myaccount.google.com/apppasswords) (requires 2-Step Verification enabled), not your regular Gmail password. Paste it without spaces.
+> Use a [Google App Password](https://myaccount.google.com/apppasswords) (requires 2-Step Verification enabled), not your regular Gmail password. Paste it without spaces. `MAIL_USERNAME` and `MAIL_FROM_ADDRESS` should be the same Gmail account.
 
-### 4. Create the database
+### 4. Create the SQLite database file
 
-Before migrating, make sure the database itself exists — Laravel doesn't create it for you, only the tables inside it.
+Laravel needs this file to already exist — it won't create it automatically.
 
-**Using the MySQL CLI (Windows Git Bash, macOS Terminal, or Linux):**
+**macOS / Linux / Git Bash (Windows):**
 ```bash
-mysql -u root -p
-```
-Then inside the MySQL prompt:
-```sql
-CREATE DATABASE phekong;
-exit;
+touch database/database.sqlite
 ```
 
-**Or using a GUI tool** like TablePlus, phpMyAdmin (bundled with Laragon/XAMPP), or Sequel Ace (macOS) — just create a new database named `phekong` (or match whatever you set in `DB_DATABASE`).
+**Windows (Command Prompt):**
+```cmd
+type nul > database\database.sqlite
+```
+
+**Windows (PowerShell):**
+```powershell
+New-Item database\database.sqlite
+```
 
 ### 5. Run migrations and seed data
 
@@ -184,6 +189,71 @@ This seeds:
 - 3 roles: `sales_rep`, `stock_admin`, `approval_admin`
 - 3 test users (see below)
 - 11 sample herbal products, several pre-set to trigger the low-stock flag
+
+## Optional: Viewing the Database with a GUI
+
+SQLite requires no separate server, but if you'd like to browse the data visually instead of using `php artisan tinker`, any of these free tools can open the `.sqlite` file directly:
+
+- **[DB Browser for SQLite](https://sqlitebrowser.org/)** — free, cross-platform, built specifically for SQLite
+- **[TablePlus](https://tableplus.com/)** — free tier, Windows/macOS, supports SQLite alongside other databases
+- **VS Code extension:** search "SQLite Viewer" or "SQLite" in the Extensions panel
+
+Just open `database/database.sqlite` from the project folder in any of these — no connection setup required.
+
+## Optional: Switching to MySQL Instead of SQLite
+
+This project defaults to SQLite for simplicity — no separate database server to install or manage. If you'd prefer to use MySQL instead (e.g. you already have it installed, or want to manage the database with a tool like phpMyAdmin, TablePlus, or MySQL Workbench), here's how to switch:
+
+### 1. Install MySQL, if you don't already have it
+
+**Windows:** Use [Laragon](https://laragon.org/) or [XAMPP](https://www.apachefriends.org/) — both bundle MySQL alongside PHP.
+
+**macOS (Homebrew):**
+```bash
+brew install mysql
+brew services start mysql
+```
+
+### 2. Create the database
+Before migrating, the database itself must exist — Laravel only creates the tables inside it, not the database.
+
+**Using the MySQL CLI:**
+```bash
+mysql -u root -p
+```
+Then inside the MySQL prompt:
+```sql
+CREATE DATABASE phekong;
+exit;
+```
+
+**Or using a GUI tool** like TablePlus, phpMyAdmin (bundled with Laragon/XAMPP), or MySQL Workbench — just create a new database named `phekong` (or match whatever you set in `DB_DATABASE` below).
+
+### 3. Update `.env`
+Replace the SQLite connection settings with:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=phekong
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+> **Windows (Laragon/XAMPP):** default username is usually `root` with an empty password, unless you set one during install.
+> **macOS (Homebrew):** default is also usually `root` with no password unless configured otherwise.
+
+### 4. Clear cached config and re-migrate
+
+```bash
+php artisan config:clear
+php artisan migrate:fresh --seed
+```
+
+From here, everything else in this guide works identically — Laravel doesn't care which database driver is active, only your `.env` changes. You can now connect to the `phekong` database directly from any MySQL GUI tool using the same host/username/password from step 3.
+
+> **Note:** If you switch to MySQL locally, remember the Render deployment (see Deployment section below) is configured for SQLite via the Dockerfile. Switching your local setup to MySQL doesn't affect what's deployed — those are independent environments, each with their own `.env`/environment variables.
 
 ### 6. Confirm role middleware is registered
 
@@ -243,7 +313,7 @@ Visit `http://localhost:8000` — you'll be redirected to login.
 | Stock Admin | stock@test.com | password |
 | Approval Admin | approve@test.com | password |
 
-> Public registration is disabled — accounts are provisioned via the seeder or `php artisan tinker`, keeping access controlled.
+> Public registration is disabled — new accounts are provisioned either via the seeder, `php artisan tinker`, or by an Approval Admin using the **Manage Users** page once logged in.
 
 ## Notifications
 
@@ -273,26 +343,92 @@ Caused by double-clicking submit or refreshing after a POST. Disable the submit 
 Tailwind only compiles classes present at build time. Run `npm run build` (or keep `composer run dev` running) and hard-refresh the browser (Ctrl+Shift+R / Cmd+Shift+R).
 
 **Emails not arriving**
-Check `MAIL_MAILER` in `.env`. Use `MAIL_MAILER=log` to dump emails to `storage/logs/laravel.log` for testing without real delivery, or confirm your Gmail App Password is correct and pasted without spaces.
+Check `MAIL_MAILER` in `.env`. Use `MAIL_MAILER=log` to dump emails to `storage/logs/laravel.log` for testing without real delivery, or confirm your Gmail App Password is correct and pasted without spaces, and that `MAIL_USERNAME` matches `MAIL_FROM_ADDRESS`.
+
+**`bash: composer: command not found` on Render**
+Render's default (non-Docker) environment doesn't have PHP/Composer installed. Deploy using the included `Dockerfile` instead, which bundles PHP, Composer, and Node in one container.
+
+**CSS/JS not loading on the deployed site, or a "mixed content" warning in browser dev tools**
+Render terminates HTTPS before your app, so Laravel may generate asset links as `http://` even on a `https://` site, and browsers block the mismatch. Fixed via `URL::forceScheme('https')` in `AppServiceProvider` (already included) — confirm `APP_ENV=production` is set on Render for this fix to trigger.
+
+**Duplicate `.env` keys (e.g. `CACHE_STORE` or `DB_CONNECTION` appearing twice)**
+Only the last occurrence of a duplicated key takes effect, which can cause confusing behavior. Search your `.env` for repeated keys and remove the unused line.
 
 ## Deployment
 
-Deployable to Render (or similar free-tier platforms). Since Render's free tier no longer offers MySQL, switch `DB_CONNECTION` to `pgsql` for deployment — no code changes required, Laravel supports Postgres natively.
+Deployed to [Render](https://render.com) using Docker, so the container bundles PHP, Composer, and Node together — no need to rely on Render's runtime auto-detection.
+
+### Dockerfile
+The project includes a `Dockerfile` at the root that:
+1. Installs PHP, Composer, and Node
+2. Runs `composer install` and `npm run build`
+3. Ensures the SQLite database file exists inside the container
+4. On container start, runs `php artisan migrate:fresh --seed --force` (rebuilds and reseeds the database) before starting the server
+
+> **Note:** Because the database is rebuilt fresh on every deploy/restart, this is ideal for a demo environment but means data doesn't persist long-term between deploys. For a production system with real ongoing data, swap SQLite for a persistent hosted database (e.g. Postgres) and remove `migrate:fresh` in favour of a plain `migrate --force`.
+
+### Render environment variables
+Set these in Render's dashboard (Settings → Environment), not in a committed `.env` file:
+
+```
+APP_KEY=<your app key>
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://<your-render-app>.onrender.com
+DB_CONNECTION=sqlite
+DB_DATABASE=database/database.sqlite
+CACHE_STORE=file
+SESSION_DRIVER=file
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=youremail@gmail.com
+MAIL_PASSWORD=your16charapppassword
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=youremail@gmail.com
+MAIL_FROM_NAME="Phekong Stock System"
+```
+
+### Render service setup
+- **Runtime:** Docker (should auto-detect the `Dockerfile`; if not, set it explicitly under Settings)
+- **Build/Start commands:** not needed — the `Dockerfile` handles both via its `CMD` instruction
+- Render's free tier has an ephemeral filesystem and spins down after inactivity, so a cold start on the first request after idle can take 30-50 seconds
+
+### Known deployment gotcha: mixed content on assets
+If CSS/JS assets fail to load with a browser "mixed content" warning, it's because Render terminates HTTPS at a reverse proxy, so Laravel may generate `http://` asset URLs internally even though the site is served over `https://`. Fixed via `AppServiceProvider`:
+
+```php
+// app/Providers/AppServiceProvider.php
+use Illuminate\Support\Facades\URL;
+
+public function boot(): void
+{
+    if ($this->app->environment('production')) {
+        URL::forceScheme('https');
+    }
+}
+```
 
 ## Project Structure Highlights
 
 ```
 app/
   Http/Controllers/
-    ProductController.php          # Product CRUD (stock_admin only)
+    ProductController.php             # Product CRUD (stock_admin only)
     StockUpdateRequestController.php  # Request + approval workflow
+    SaleController.php                # Daily sales sheet + sales report
+    UserController.php                # User management (approval_admin only)
   Models/
     Product.php
     StockUpdateRequest.php
+    Sale.php
   Notifications/
     StockRequestSubmitted.php
     LowStockAlert.php
+  Providers/
+    AppServiceProvider.php            # Forces HTTPS asset URLs in production
 database/
+  database.sqlite                     # SQLite database file
   migrations/
   seeders/
     RoleSeeder.php
@@ -304,8 +440,15 @@ resources/views/
     edit.blade.php
   stock-requests/
     index.blade.php
+  sales/
+    create.blade.php                  # Sales rep's daily sales sheet
+    index.blade.php                   # Stock admin's sales report
+  users/
+    index.blade.php                   # Approval admin's user list
+    create.blade.php                  # Approval admin's add-user form
 routes/
   web.php
+Dockerfile                            # Render deployment container
 ```
 
 ## Author
