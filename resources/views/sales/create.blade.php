@@ -23,14 +23,22 @@
                 <input type="date" name="sale_date" value="{{ old('sale_date', now()->toDateString()) }}" class="border rounded p-2 text-sm w-full sm:w-auto">
             </div>
 
-            {{-- Mobile: card-per-product --}}
-            <div class="sm:hidden space-y-2">
+            {{-- Single row per product — one input, responsive layout, no duplication --}}
+            <div class="bg-white shadow rounded-xl overflow-hidden divide-y divide-gray-100">
+                <div class="hidden sm:flex bg-gray-100 text-left text-sm font-medium text-gray-600 px-4 py-2">
+                    <span class="flex-1">Product</span>
+                    <span class="w-28">Current Stock</span>
+                    <span class="w-28">Qty Sold</span>
+                </div>
+
                 @foreach ($products as $index => $product)
-                    <div class="bg-white shadow rounded-xl p-4 flex items-center justify-between gap-3">
-                        <div class="min-w-0">
+                    <div class="flex items-center justify-between gap-3 px-4 py-3">
+                        <div class="min-w-0 flex-1">
                             <p class="font-medium text-gray-900 truncate">{{ $product->name }}</p>
-                            <p class="text-xs text-gray-500">{{ $product->quantity }} in stock</p>
+                            <p class="text-xs text-gray-500 sm:hidden">{{ $product->quantity }} in stock</p>
                         </div>
+                        <span class="hidden sm:block w-28 text-sm text-gray-600">{{ $product->quantity }}</span>
+
                         <input type="hidden" name="sales[{{ $index }}][product_id]" value="{{ $product->id }}">
                         <input
                             type="number"
@@ -38,33 +46,11 @@
                             min="0"
                             max="{{ $product->quantity }}"
                             placeholder="0"
-                            class="border rounded-lg p-2 text-sm w-20 text-center flex-shrink-0"
+                            class="border rounded-lg p-2 text-sm w-20 sm:w-24 text-center flex-shrink-0"
                         >
                     </div>
                 @endforeach
             </div>
-
-            {{-- Desktop: table --}}
-            <table class="min-w-full text-sm mt-4 hidden sm:table bg-white shadow rounded">
-                <thead class="bg-gray-100 text-left">
-                    <tr>
-                        <th class="p-2">Product</th>
-                        <th class="p-2">Current Stock</th>
-                        <th class="p-2">Quantity Sold</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($products as $index => $product)
-                        <tr class="border-t">
-                            <td class="p-2">{{ $product->name }}</td>
-                            <td class="p-2 text-gray-600">{{ $product->quantity }}</td>
-                            <td class="p-2">
-                                <input type="number" name="sales[{{ $index }}][quantity_sold]" min="0" max="{{ $product->quantity }}" class="border rounded p-1 w-24">
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
 
             <button type="submit" class="mt-4 w-full sm:w-auto px-4 py-2.5 bg-indigo-600 text-white rounded-lg font-medium">Submit Sales</button>
         </form>
