@@ -12,6 +12,16 @@ Route::get('/', function () {
     return redirect()->route('products.index');
 });
 
+Route::middleware('role:sales_rep|stock_admin')->group(function () {
+    Route::get('/sales/create', [SaleController::class, 'create'])->name('sales.create');
+    Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
+});
+
+Route::middleware('role:stock_admin')->group(function () {
+    // ...existing product CRUD + stock request routes...
+    Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
+    Route::get('/sales/dashboard', [SaleController::class, 'dashboard'])->name('sales.dashboard');
+});
 
 Route::middleware('role:approval_admin')->group(function () {
     Route::get('/stock-requests', [StockUpdateRequestController::class, 'index'])->name('stock-requests.index');

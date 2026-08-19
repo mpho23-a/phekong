@@ -16,7 +16,18 @@
             <input type="date" name="to" value="{{ request('to') }}" class="border rounded p-2">
             <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Filter</button>
         </form>
-
+        <div class="flex flex-wrap gap-2 mb-4">
+            <a href="{{ route('sales.dashboard') }}" class="px-4 py-2 bg-indigo-600 text-white rounded text-sm">📊
+                Dashboard</a>
+            <a href="{{ route('sales.index', ['from' => now()->toDateString(), 'to' => now()->toDateString()]) }}"
+                class="px-4 py-2 bg-gray-200 rounded text-sm">Today</a>
+            <a href="{{ route('sales.index', ['from' => now()->startOfWeek()->toDateString(), 'to' => now()->toDateString()]) }}"
+                class="px-4 py-2 bg-gray-200 rounded text-sm">This Week</a>
+            <a href="{{ route('sales.index', ['from' => now()->startOfMonth()->toDateString(), 'to' => now()->toDateString()]) }}"
+                class="px-4 py-2 bg-gray-200 rounded text-sm">This Month</a>
+            <a href="{{ route('sales.index', ['from' => now()->startOfYear()->toDateString(), 'to' => now()->toDateString()]) }}"
+                class="px-4 py-2 bg-gray-200 rounded text-sm">This Year</a>
+        </div>
         <div class="bg-white shadow rounded overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-gray-100 text-left">
@@ -36,7 +47,9 @@
                             <td class="p-3">{{ $sale->salesRep->name }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" class="p-3 text-center text-gray-500">No sales recorded.</td></tr>
+                        <tr>
+                            <td colspan="4" class="p-3 text-center text-gray-500">No sales recorded.</td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
