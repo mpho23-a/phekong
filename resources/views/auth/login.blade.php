@@ -52,7 +52,7 @@
         </div>
 
         {{-- Submit --}}
-        <button type="submit" class="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium text-base hover:bg-indigo-700 transition">
+        <button type="submit" class="w-full py-3 bg-green-800 text-white rounded-lg font-medium text-base hover:bg-indigo-700 transition">
             Log in
         </button>
     </form>
