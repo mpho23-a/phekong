@@ -12,7 +12,7 @@
             <x-input-label for="email" value="Email" class="mb-1" />
             <x-text-input
                 id="email"
-                class="block mt-1 w-full rounded-lg border-gray-300 py-3 px-4 text-base focus:border-indigo-500 focus:ring-indigo-500"
+                class="block mt-1 w-full rounded-lg border-gray-300 py-3 px-4 text-base focus:border-green-500 focus:ring-green-500"
                 type="email"
                 name="email"
                 :value="old('email')"
@@ -28,7 +28,7 @@
             <x-input-label for="password" value="Password" class="mb-1" />
             <x-text-input
                 id="password"
-                class="block mt-1 w-full rounded-lg border-gray-300 py-3 px-4 text-base focus:border-indigo-500 focus:ring-indigo-500"
+                class="block mt-1 w-full rounded-lg border-gray-300 py-3 px-4 text-base focus:border-green-500 focus:ring-green-500"
                 type="password"
                 name="password"
                 required
@@ -40,19 +40,19 @@
         {{-- Remember me --}}
         <div class="flex items-center justify-between">
             <label for="remember_me" class="flex items-center gap-2">
-                <input id="remember_me" type="checkbox" name="remember" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                <input id="remember_me" type="checkbox" name="remember" class="rounded border-gray-300 text-green-600 focus:ring-green-500">
                 <span class="text-sm text-gray-600">Remember me</span>
             </label>
 
             @if (Route::has('password.request'))
-                <a href="{{ route('password.request') }}" class="text-sm text-indigo-600 hover:underline">
+                <a href="{{ route('password.request') }}" class="text-sm text-green-600 hover:underline">
                     Forgot password?
                 </a>
             @endif
         </div>
 
         {{-- Submit --}}
-        <button type="submit" class="w-full py-3 bg-green-800 text-white rounded-lg font-medium text-base hover:bg-indigo-700 transition">
+        <button type="submit" class="w-full py-3 bg-green-800 text-white rounded-lg font-medium text-base hover:bg-green-700 transition">
             Log in
         </button>
     </form>
