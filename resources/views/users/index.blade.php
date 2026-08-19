@@ -37,18 +37,26 @@
                                 </span>
                             </td>
                             <td class="p-3">
-                                @if ($user->id !== auth()->id())
-                                    <form action="{{ route('users.destroy', $user) }}" method="POST" onsubmit="return confirm('Remove this user?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:underline">Remove</button>
-                                    </form>
-                                @else
-                                    <span class="text-gray-400">You</span>
-                                @endif
+                                <div class="flex flex-col sm:flex-row gap-1 sm:gap-2">
+                                    <a href="{{ route('users.edit', $user) }}"
+                                        class="text-indigo-600 hover:underline">Edit Roles</a>
+                                    @if ($user->id !== auth()->id())
+                                        <form action="{{ route('users.destroy', $user) }}" method="POST"
+                                            onsubmit="return confirm('Remove this user?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="text-red-600 hover:underline">Remove</button>
+                                        </form>
+                                    @else
+                                        <span class="text-gray-400">You</span>
+                                    @endif
+                                </div>
                             </td>
+                         
                         </tr>
                     @empty
-                        <tr><td colspan="4" class="p-3 text-center text-gray-500">No users found.</td></tr>
+                        <tr>
+                            <td colspan="4" class="p-3 text-center text-gray-500">No users found.</td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>

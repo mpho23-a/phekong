@@ -39,6 +39,26 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', "{$user->name} added as {$validated['role']}.");
     }
 
+    public function edit(User $user)
+    {
+        $allRoles = ['sales_rep', 'stock_admin', 'approval_admin'];
+        $userRoles = $user->roles->pluck('name')->toArray();
+
+        return view('users.edit', compact('user', 'allRoles', 'userRoles'));
+    }
+
+    public function update(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'roles' => 'required|array|min:1',
+            'roles.*' => 'in:sales_rep,stock_admin,approval_admin',
+        ]);
+
+        $user->syncRoles($validated['roles']);
+
+        return redirect()->route('users.index')->with('success', "{$user->name}'s roles updated.");
+    }
+
     public function destroy(User $user)
     {
         if ($user->id === auth()->id()) {
