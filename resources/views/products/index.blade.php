@@ -12,7 +12,7 @@
         <form method="GET" class="mb-4">
             <div class="relative">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products..."
-                    class="w-full border rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    class="w-full border rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
                 <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none"
                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -32,7 +32,7 @@
         {{-- Page-specific action: always visible, not duplicated in bottom nav --}}
         @if (auth()->user()->hasRole('stock_admin'))
             <a href="{{ route('products.create') }}"
-                class="inline-block mb-4 px-4 py-2 bg-indigo-600 text-white rounded text-sm">
+                class="inline-block mb-4 px-4 py-2 bg-green-600 text-white rounded text-sm">
                 + Add Product
             </a>
         @endif
@@ -41,7 +41,7 @@
         <div class="hidden sm:flex flex-wrap gap-2 mb-4">
             @if (auth()->user()->hasRole('stock_admin'))
                 <a href="{{ route('sales.dashboard') }}"
-                    class="px-4 py-2 bg-indigo-600 text-white rounded text-sm">Sales Dashboard</a>
+                    class="px-4 py-2 bg-green-600 text-white rounded text-sm">Sales Dashboard</a>
                 {{--   <a href="{{ route('sales.create') }}" class="px-4 py-2 bg-green-600 text-white rounded text-sm">Log Sale</a> --}}
                 <a href="{{ route('sales.index') }}" class="px-4 py-2 bg-green-600 text-white rounded text-sm">Sales
                     Report</a>
@@ -55,7 +55,7 @@
             @endif
 
             @if (auth()->user()->hasRole('sales_rep'))
-                <a href="{{ route('sales.create') }}" class="px-4 py-2 bg-indigo-600 text-white rounded text-sm">Log
+                <a href="{{ route('sales.create') }}" class="px-4 py-2 bg-green-600 text-white rounded text-sm">Log
                     Today's Sales</a>
             @endif
         </div>
@@ -83,7 +83,7 @@
 
                         @if (auth()->user()->hasRole('stock_admin'))
                             <div class="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
-                                <a href="{{ route('products.edit', $product) }}" class="text-indigo-600"
+                                <a href="{{ route('products.edit', $product) }}" class="text-green-600"
                                     aria-label="Edit product">
                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                         stroke-width="2">
@@ -128,7 +128,7 @@
                                     <input type="text" name="reason" placeholder="Reason (optional)"
                                         class="border rounded px-2 py-1.5 text-sm w-full">
                                     <button type="submit"
-                                        class="px-3 py-1.5 bg-indigo-600 text-white rounded text-xs">Submit
+                                        class="px-3 py-1.5 bg-green-600 text-white rounded text-xs">Submit
                                         Request</button>
                                 </form>
                             </div>
@@ -179,7 +179,7 @@
                             @if (auth()->user()->hasRole('stock_admin'))
                                 <td class="p-3 space-x-2">
                                     <a href="{{ route('products.edit', $product) }}"
-                                        class="text-indigo-600 hover:underline">Edit</a>
+                                        class="text-green-600 hover:underline">Edit</a>
 
                                     <form action="{{ route('products.destroy', $product) }}" method="POST"
                                         class="inline" onsubmit="return confirm('Delete this product?')">
@@ -202,7 +202,7 @@
                                             <input type="text" name="reason" placeholder="Reason"
                                                 class="border rounded px-2 py-1">
                                             <button type="submit"
-                                                class="px-3 py-1 bg-indigo-600 text-white rounded text-xs">Submit</button>
+                                                class="px-3 py-1 bg-green-600 text-white rounded text-xs">Submit</button>
                                         </form>
                                     </div>
                                 </td>
