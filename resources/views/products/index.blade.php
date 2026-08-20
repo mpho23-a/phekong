@@ -6,13 +6,13 @@
     <div class="py-6 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 sm:pb-6">
 
         @if (session('success'))
-            <div class="mb-4 p-3 bg-green-100 text-green-700 rounded">{{ session('success') }}</div>
+            <div class="mb-4 p-3 bg-phekong-light text-phekong-dark rounded">{{ session('success') }}</div>
         @endif
 
         <form method="GET" class="mb-4">
             <div class="relative">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products..."
-                    class="w-full border rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                    class="w-full border rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-phekong">
                 <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none"
                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -32,7 +32,7 @@
         {{-- Page-specific action: always visible, not duplicated in bottom nav --}}
         @if (auth()->user()->hasRole('stock_admin'))
             <a href="{{ route('products.create') }}"
-                class="inline-block mb-4 px-4 py-2 bg-green-600 text-white rounded text-sm">
+                class="inline-block mb-4 px-4 py-2 bg-phekong text-white rounded text-sm">
                 + Add Product
             </a>
         @endif
@@ -41,9 +41,9 @@
         <div class="hidden sm:flex flex-wrap gap-2 mb-4">
             @if (auth()->user()->hasRole('stock_admin'))
                 <a href="{{ route('sales.dashboard') }}"
-                    class="px-4 py-2 bg-green-600 text-white rounded text-sm">Sales Dashboard</a>
-                {{--   <a href="{{ route('sales.create') }}" class="px-4 py-2 bg-green-600 text-white rounded text-sm">Log Sale</a> --}}
-                <a href="{{ route('sales.index') }}" class="px-4 py-2 bg-green-600 text-white rounded text-sm">Sales
+                    class="px-4 py-2 bg-phekong text-white rounded text-sm">Sales Dashboard</a>
+                {{--   <a href="{{ route('sales.create') }}" class="px-4 py-2 bg-phekong-600 text-white rounded text-sm">Log Sale</a> --}}
+                <a href="{{ route('sales.index') }}" class="px-4 py-2 bg-phekong text-white rounded text-sm">Sales
                     Report</a>
             @endif
 
@@ -55,7 +55,7 @@
             @endif
 
             @if (auth()->user()->hasRole('sales_rep'))
-                <a href="{{ route('sales.create') }}" class="px-4 py-2 bg-green-600 text-white rounded text-sm">Log
+                <a href="{{ route('sales.create') }}" class="px-4 py-2 bg-phekong text-white rounded text-sm">Log
                     Today's Sales</a>
             @endif
         </div>
@@ -64,7 +64,7 @@
         <div class="sm:hidden space-y-3">
             @forelse ($products as $product)
                 <div
-                    class="bg-white shadow rounded-xl overflow-hidden border-l-4 {{ $product->isLowStock() ? 'border-red-500' : 'border-green-500' }}">
+                    class="bg-white shadow rounded-xl overflow-hidden border-l-4 {{ $product->isLowStock() ? 'border-red-500' : 'border-phekong-dark' }}">
                     <div class="p-4">
                         <div class="flex items-start justify-between gap-2">
                             <p class="font-semibold text-gray-900">{{ $product->name }}</p>
@@ -74,7 +74,7 @@
                                     Stock</span>
                             @else
                                 <span
-                                    class="flex-shrink-0 px-2 py-0.5 text-[10px] font-medium bg-green-100 text-green-700 rounded-full">OK</span>
+                                    class="flex-shrink-0 px-2 py-0.5 text-[10px] font-medium bg-phekong-light text-green rounded-full">OK</span>
                             @endif
                         </div>
                         <p class="text-sm text-gray-500 mt-1">
@@ -83,7 +83,7 @@
 
                         @if (auth()->user()->hasRole('stock_admin'))
                             <div class="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
-                                <a href="{{ route('products.edit', $product) }}" class="text-green-600"
+                                <a href="{{ route('products.edit', $product) }}" class="text-phekong-dark"
                                     aria-label="Edit product">
                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                         stroke-width="2">
@@ -95,9 +95,10 @@
                                 </a>
 
                                 <form action="{{ route('products.destroy', $product) }}" method="POST"
-                                    onsubmit="return confirm('Delete this product?')">
+                                    onsubmit="return confirm('Delete this product?')" class="flex m-0">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="text-red-600" aria-label="Delete product">
+                                    <button type="submit" class="flex items-center text-red-600"
+                                        aria-label="Delete product">
                                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                             stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -128,7 +129,7 @@
                                     <input type="text" name="reason" placeholder="Reason (optional)"
                                         class="border rounded px-2 py-1.5 text-sm w-full">
                                     <button type="submit"
-                                        class="px-3 py-1.5 bg-green-600 text-white rounded text-xs">Submit
+                                        class="px-3 py-1.5 bg-phekong text-white rounded text-xs">Submit
                                         Request</button>
                                 </form>
                             </div>
@@ -173,13 +174,13 @@
                                 @if ($product->isLowStock())
                                     <span class="px-2 py-1 text-xs bg-red-600 text-white rounded">Low Stock</span>
                                 @else
-                                    <span class="px-2 py-1 text-xs bg-green-600 text-white rounded">OK</span>
+                                    <span class="px-2 py-1 text-xs bg-green-400 text-white rounded">OK</span>
                                 @endif
                             </td>
                             @if (auth()->user()->hasRole('stock_admin'))
                                 <td class="p-3 space-x-2">
                                     <a href="{{ route('products.edit', $product) }}"
-                                        class="text-green-600 hover:underline">Edit</a>
+                                        class="text-phekong-dark hover:underline">Edit</a>
 
                                     <form action="{{ route('products.destroy', $product) }}" method="POST"
                                         class="inline" onsubmit="return confirm('Delete this product?')">
@@ -202,7 +203,7 @@
                                             <input type="text" name="reason" placeholder="Reason"
                                                 class="border rounded px-2 py-1">
                                             <button type="submit"
-                                                class="px-3 py-1 bg-green-600 text-white rounded text-xs">Submit</button>
+                                                class="px-3 py-1 bg-phekong text-white rounded text-xs">Submit</button>
                                         </form>
                                     </div>
                                 </td>
@@ -215,6 +216,9 @@
                     @endforelse
                 </tbody>
             </table>
+            <div class="mt-4 pl-2">
+                {{ $products->links() }}
+            </div>
         </div>
     </div>
 

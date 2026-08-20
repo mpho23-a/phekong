@@ -7,11 +7,16 @@
 
         {{-- Quick filters --}}
         <div class="flex flex-wrap gap-2 mb-4">
-            <a href="{{ route('sales.dashboard') }}" class="px-3 py-1.5 bg-green-600 text-white rounded-full text-xs font-medium">Dashboard</a>
-            <a href="{{ route('sales.index', ['from' => now()->toDateString(), 'to' => now()->toDateString()]) }}" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">Today</a>
-            <a href="{{ route('sales.index', ['from' => now()->startOfWeek()->toDateString(), 'to' => now()->toDateString()]) }}" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">This Week</a>
-            <a href="{{ route('sales.index', ['from' => now()->startOfMonth()->toDateString(), 'to' => now()->toDateString()]) }}" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">This Month</a>
-            <a href="{{ route('sales.index', ['from' => now()->startOfYear()->toDateString(), 'to' => now()->toDateString()]) }}" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">This Year</a>
+            <a href="{{ route('sales.dashboard') }}"
+                class="px-3 py-1.5 bg-phekong-dark text-white rounded-full text-xs font-medium">Dashboard</a>
+            <a href="{{ route('sales.index', ['from' => now()->toDateString(), 'to' => now()->toDateString()]) }}"
+                class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">Today</a>
+            <a href="{{ route('sales.index', ['from' => now()->startOfWeek()->toDateString(), 'to' => now()->toDateString()]) }}"
+                class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">This Week</a>
+            <a href="{{ route('sales.index', ['from' => now()->startOfMonth()->toDateString(), 'to' => now()->toDateString()]) }}"
+                class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">This Month</a>
+            <a href="{{ route('sales.index', ['from' => now()->startOfYear()->toDateString(), 'to' => now()->toDateString()]) }}"
+                class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">This Year</a>
         </div>
 
         <form method="GET" class="flex flex-col sm:flex-row flex-wrap gap-2 mb-4 bg-white p-4 rounded-xl shadow">
@@ -21,9 +26,12 @@
                     <option value="{{ $product->id }}" @selected(request('product_id') == $product->id)>{{ $product->name }}</option>
                 @endforeach
             </select>
-            <input type="date" name="from" value="{{ request('from') }}" class="border rounded p-2 text-sm w-full sm:w-auto">
-            <input type="date" name="to" value="{{ request('to') }}" class="border rounded p-2 text-sm w-full sm:w-auto">
-            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded text-sm w-full sm:w-auto">Filter</button>
+            <input type="date" name="from" value="{{ request('from') }}"
+                class="border rounded p-2 text-sm w-full sm:w-auto">
+            <input type="date" name="to" value="{{ request('to') }}"
+                class="border rounded p-2 text-sm w-full sm:w-auto">
+            <button type="submit"
+                class="px-4 py-2 bg-phekong-dark text-white rounded text-sm w-full sm:w-auto">Filter</button>
         </form>
 
         {{-- Mobile: card list --}}
@@ -38,7 +46,8 @@
                     </div>
                     <div class="text-right flex-shrink-0 ml-3">
                         <p class="font-semibold text-gray-900">{{ $sale->quantity_sold }} units</p>
-                        <p class="text-xs text-indigo-600">R{{ number_format($sale->quantity_sold * $sale->price_at_sale, 2) }}</p>
+                        <p class="text-xs text-phekong-600">
+                            R{{ number_format($sale->quantity_sold * $sale->price_at_sale, 2) }}</p>
                     </div>
                 </div>
             @empty
@@ -64,11 +73,14 @@
                             <td class="p-3">{{ $sale->sale_date->format('d M Y') }}</td>
                             <td class="p-3">{{ $sale->product->name }}</td>
                             <td class="p-3">{{ $sale->quantity_sold }}</td>
-                            <td class="p-3">R{{ number_format($sale->quantity_sold * $sale->price_at_sale, 2) }}</td>
+                            <td class="p-3">R{{ number_format($sale->quantity_sold * $sale->price_at_sale, 2) }}
+                            </td>
                             <td class="p-3">{{ $sale->salesRep->name }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="p-3 text-center text-gray-500">No sales recorded.</td></tr>
+                        <tr>
+                            <td colspan="5" class="p-3 text-center text-gray-500">No sales recorded.</td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>

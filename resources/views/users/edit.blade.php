@@ -24,7 +24,7 @@
             </div>
 
             <div class="flex gap-2">
-                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Save Roles</button>
+                <button type="submit" class="px-4 py-2 bg-phekong-600 text-white rounded">Save Roles</button>
                 <a href="{{ route('users.index') }}" class="px-4 py-2 bg-gray-200 rounded">Cancel</a>
             </div>
         </form>

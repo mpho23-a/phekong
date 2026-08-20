@@ -14,6 +14,14 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                phekong: {
+                    
+                    DEFAULT: '#769C39',
+                    light: '#E4F1D0',
+                    dark: '#3A4F17',
+                },
+            },
         },
     },
 

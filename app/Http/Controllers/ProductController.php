@@ -8,21 +8,23 @@ use Illuminate\Http\Request;
 class ProductController extends Controller
 {
     public function index(Request $request)
-    {
-        $query = Product::query();
+{
+    $query = Product::query();
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        $products = $query->orderBy('name')->get();
-
-        return view('products.index', compact('products'));
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%");
+        });
     }
+
+    $products = $query->orderBy('name')
+        ->paginate(15)
+        ->appends($request->query()); // keeps ?search=... in the page links
+
+    return view('products.index', compact('products'));
+}
 
     public function create()
     {

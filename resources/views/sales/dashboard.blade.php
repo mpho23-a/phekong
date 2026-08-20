@@ -18,7 +18,7 @@
 
         {{-- Horizontal-scrolling stat strip — Instagram stories row style --}}
         <div class="flex gap-3 overflow-x-auto pb-2 mb-6 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
-            <div class="flex-shrink-0 w-32 bg-white shadow rounded-xl p-4 border-2 border-green-100">
+            <div class="flex-shrink-0 w-32 bg-white shadow rounded-xl p-4 border-2 border-phekong">
                 <p class="text-[11px] uppercase tracking-wide text-gray-400 font-medium">Today</p>
                 <p class="text-lg font-bold text-gray-900 mt-1">R{{ number_format($todayStats['revenue'], 0) }}</p>
                 <p class="text-[11px] text-gray-400">{{ $todayStats['transactions'] }} sales</p>
@@ -54,8 +54,8 @@
             <div class="sm:hidden divide-y divide-gray-100">
                 @forelse ($topProducts as $product)
                     <div class="flex items-center gap-3 p-4">
-                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                            <span class="text-green-600 font-bold text-sm">{{ substr($product['name'], 0, 1) }}</span>
+                        <div class="w-10 h-10 rounded-full bg-phekong flex items-center justify-center flex-shrink-0">
+                            <span class="text-phekong-600 font-bold text-sm">{{ substr($product['name'], 0, 1) }}</span>
                         </div>
                         <div class="flex-1 min-w-0">
                             <p class="font-medium text-gray-900 truncate">{{ $product['name'] }}</p>
@@ -92,7 +92,7 @@
         </div>
 
         <div class="mt-4 text-center sm:text-left">
-            <a href="{{ route('sales.index') }}" class="text-green-600 hover:underline text-sm font-medium">View full sales log →</a>
+            <a href="{{ route('sales.index') }}" class="text-phekong-dark hover:underline text-sm font-medium">View full sales log →</a>
         </div>
     </div>
 
@@ -113,7 +113,7 @@
                 datasets: [{
                     label: 'Revenue (R)',
                     data: {!! json_encode($last7Days->pluck('revenue')) !!},
-                    backgroundColor: 'rgb(22, 163, 74)',
+                    backgroundColor: 'rgba(118,156,57,0.8)',
                     borderRadius: 6,
                     maxBarThickness: 40,
                 }]

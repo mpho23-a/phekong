@@ -17,7 +17,7 @@
 
         {{-- Wordmark --}}
         <div class="mb-8 flex flex-col items-center">
-            <div class="w-14 h-14 rounded-2xl bg-green-800 flex items-center justify-center shadow-lg shadow-green-600/20">
+            <div class="w-14 h-14 rounded-2xl bg-phekong flex items-center justify-center shadow-lg shadow-phekong-dark/20">
                 <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-1.5 3-4 5-4 8.5a4 4 0 108 0C16 8 13.5 6 12 3z" />
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-6" />

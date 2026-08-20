@@ -6,7 +6,7 @@
     <div class="py-6 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 sm:pb-6">
 
         @if (session('success'))
-            <div class="mb-4 p-3 bg-green-100 text-green-700 rounded">{{ session('success') }}</div>
+            <div class="mb-4 p-3 bg-phekong-100 text-phekong-700 rounded">{{ session('success') }}</div>
         @endif
         @if (session('error'))
             <div class="mb-4 p-3 bg-red-100 text-red-700 rounded">{{ session('error') }}</div>
@@ -52,7 +52,7 @@
                 @endforeach
             </div>
 
-            <button type="submit" class="mt-4 w-full sm:w-auto px-4 py-2.5 bg-indigo-600 text-white rounded-lg font-medium">Submit Sales</button>
+            <button type="submit" class="mt-4 w-full sm:w-auto px-4 py-2.5 bg-phekong text-white rounded-lg font-medium">Submit Sales</button>
         </form>
     </div>
 

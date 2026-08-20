@@ -9,13 +9,13 @@
 
             <div>
                 <label class="block text-sm font-medium">Name</label>
-                <input type="text" name="name" value="{{ old('name') }}" class="mt-1 block w-full border rounded p-2">
+                <input type="text" name="name" value="{{ old('name') }}" placeholder="Enter prodcut name" class="mt-1 block w-full border rounded p-2">
                 @error('name') <p class="text-red-600 text-sm">{{ $message }}</p> @enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium">Description</label>
-                <textarea name="description" class="mt-1 block w-full border rounded p-2">{{ old('description') }}</textarea>
+                <textarea  placeholder="Enter product description" name="description" class="mt-1 block w-full border rounded p-2">{{ old('description') }}</textarea>
             </div>
 
             <div>
@@ -35,7 +35,7 @@
             </div>
 
             <div class="flex gap-2">
-                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Save</button>
+                <button type="submit" class="px-4 py-2 bg-phekong text-white rounded">Save</button>
                 <a href="{{ route('products.index') }}" class="px-4 py-2 bg-gray-200 rounded">Cancel</a>
             </div>
         </form>
